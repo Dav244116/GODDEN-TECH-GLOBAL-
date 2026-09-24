@@ -51,6 +51,11 @@
           🔍
         </button>
 
+        <!-- ACCOUNT -->
+        <button class="icon-btn" id="accountBtn" aria-label="Account">
+          👤
+        </button>
+
         <button class="cart-btn" id="cartBtn">
           🛒
           <span id="cartCount">0</span>
@@ -72,6 +77,10 @@
       <a href="#categories">Categories</a>
       <a href="#about">About</a>
       <a href="#contact">Contact</a>
+
+      <button class="btn btn-outline" id="mobileAccountBtn">
+        👤 Account
+      </button>
 
     </div>
 
@@ -610,6 +619,105 @@
   </div>
 
 
+  <!-- ACCOUNT MODAL -->
+  <div class="modal" id="accountModal">
+
+    <div class="modal-content">
+
+      <button class="modal-close" id="accountClose">
+        ✕
+      </button>
+
+      <div style="font-size:42px; margin-bottom:10px;">
+        👤
+      </div>
+
+      <span class="eyebrow">GODDEN TECH GLOBAL</span>
+
+      <h2 id="accountTitle">
+        Create Account
+      </h2>
+
+      <p id="accountMessage">
+        Create your account to manage your orders.
+      </p>
+
+      <!-- REGISTER -->
+      <form id="registerForm">
+
+        <input
+          type="text"
+          id="registerName"
+          placeholder="Full name"
+          required
+        >
+
+        <input
+          type="email"
+          id="registerEmail"
+          placeholder="Email address"
+          required
+        >
+
+        <input
+          type="password"
+          id="registerPassword"
+          placeholder="Password"
+          minlength="6"
+          required
+        >
+
+        <button type="submit" class="btn btn-primary full-btn">
+          Create Account
+        </button>
+
+      </form>
+
+      <!-- LOGIN -->
+      <form id="loginForm" style="display:none;">
+
+        <input
+          type="email"
+          id="loginEmail"
+          placeholder="Email address"
+          required
+        >
+
+        <input
+          type="password"
+          id="loginPassword"
+          placeholder="Password"
+          required
+        >
+
+        <button type="submit" class="btn btn-primary full-btn">
+          Login
+        </button>
+
+      </form>
+
+      <div style="margin-top:18px; text-align:center;">
+
+        <button
+          type="button"
+          id="switchAccountMode"
+          class="btn btn-outline"
+        >
+          Already have an account? Login
+        </button>
+
+      </div>
+
+      <div
+        id="accountStatus"
+        style="margin-top:15px; text-align:center;"
+      ></div>
+
+    </div>
+
+  </div>
+
+
   <!-- CART OVERLAY -->
   <div class="overlay" id="overlay"></div>
 
@@ -679,5 +787,217 @@
 
   <script src="script.js"></script>
 
-</body>
-          </html>
+
+  <!-- ACCOUNT FUNCTIONALITY -->
+  <script>
+
+    const ACCOUNT_BACKEND =
+      "https://godden-tech-backend-production.up.railway.app";
+
+    const accountModal =
+      document.getElementById("accountModal");
+
+    const accountBtn =
+      document.getElementById("accountBtn");
+
+    const mobileAccountBtn =
+      document.getElementById("mobileAccountBtn");
+
+    const accountClose =
+      document.getElementById("accountClose");
+
+    const registerForm =
+      document.getElementById("registerForm");
+
+    const loginForm =
+      document.getElementById("loginForm");
+
+    const switchAccountMode =
+      document.getElementById("switchAccountMode");
+
+    const accountTitle =
+      document.getElementById("accountTitle");
+
+    const accountMessage =
+      document.getElementById("accountMessage");
+
+    const accountStatus =
+      document.getElementById("accountStatus");
+
+
+    let loginMode = false;
+
+
+    function openAccountModal() {
+
+      accountModal.classList.add("active");
+
+      accountStatus.textContent = "";
+
+    }
+
+
+    function closeAccountModal() {
+
+      accountModal.classList.remove("active");
+
+    }
+
+
+    function showLoginForm() {
+
+      loginMode = true;
+
+      registerForm.style.display = "none";
+
+      loginForm.style.display = "block";
+
+      accountTitle.textContent = "Welcome Back";
+
+      accountMessage.textContent =
+        "Login to your GODDEN TECH GLOBAL account.";
+
+      switchAccountMode.textContent =
+        "Don't have an account? Create one";
+
+      accountStatus.textContent = "";
+
+    }
+
+
+    function showRegisterForm() {
+
+      loginMode = false;
+
+      registerForm.style.display = "block";
+
+      loginForm.style.display = "none";
+
+      accountTitle.textContent = "Create Account";
+
+      accountMessage.textContent =
+        "Create your account to manage your orders.";
+
+      switchAccountMode.textContent =
+        "Already have an account? Login";
+
+      accountStatus.textContent = "";
+
+    }
+
+
+    accountBtn.addEventListener(
+      "click",
+      openAccountModal
+    );
+
+
+    mobileAccountBtn.addEventListener(
+      "click",
+      openAccountModal
+    );
+
+
+    accountClose.addEventListener(
+      "click",
+      closeAccountModal
+    );
+
+
+    switchAccountMode.addEventListener(
+      "click",
+      function () {
+
+        if (loginMode) {
+
+          showRegisterForm();
+
+        } else {
+
+          showLoginForm();
+
+        }
+
+      }
+    );
+
+
+    accountModal.addEventListener(
+      "click",
+      function (event) {
+
+        if (event.target === accountModal) {
+
+          closeAccountModal();
+
+        }
+
+      }
+    );
+
+
+    registerForm.addEventListener(
+      "submit",
+      async function (event) {
+
+        event.preventDefault();
+
+        accountStatus.textContent =
+          "Creating account...";
+
+        const name =
+          document.getElementById("registerName").value.trim();
+
+        const email =
+          document.getElementById("registerEmail").value.trim();
+
+        const password =
+          document.getElementById("registerPassword").value;
+
+
+        try {
+
+          const response = await fetch(
+            ACCOUNT_BACKEND + "/api/auth/register",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                name,
+                email,
+                password
+              })
+            }
+          );
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              data.message || "Registration failed."
+            );
+
+          }
+
+
+          localStorage.setItem(
+            "goddenToken",
+            data.token
+          );
+
+
+          localStorage.setItem(
+            "goddenUser",
+            JSON.stringify(data.user)
+          );
+
+
+  
