@@ -4,15 +4,18 @@
 ========================================= */
 
 
+/* BACKEND */
+
+const BACKEND_URL =
+  "https://godden-tech-backend-production.up.railway.app";
+
+
 /* WHATSAPP NUMBER */
 
 const WHATSAPP_NUMBER = "2347068270950";
 
 
-/* PRODUCT DATABASE
-   These are sample catalog items.
-   Replace prices/products with actual store inventory.
-*/
+/* PRODUCT DATABASE */
 
 const products = [
 
@@ -605,7 +608,7 @@ function showToast(message) {
 
 /* CHECKOUT */
 
-function checkout() {
+async function checkout() {
 
   if (cart.length === 0) {
 
@@ -633,11 +636,71 @@ function checkout() {
     });
 
 
-  const message =
+  /*
+    Send order to GODDEN TECH backend
+  */
+
+  try {
+
+    showToast("Sending your order...");
+
+
+    const response =
+      await fetch(`${BACKEND_URL}/api/orders`, {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+          customer: {
+            source: "GODDEN TECH GLOBAL website"
+          },
+
+          items: cart.map(item => ({
+
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+
+          })),
+
+          total: total
+
+        })
+
+      });
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok || !data.success) {
+
+      throw new Error(
+        data.message || "Order could not be created."
+      );
+
+    }
+
+
+    const orderId =
+      data.order?.orderId || "Pending";
+
+
+    const message =
 
 `Hello GODDEN TECH GLOBAL 👋
 
 I would like to place an order.
+
+ORDER ID:
+${orderId}
 
 MY ORDER:
 ${orderLines.join("\n")}
@@ -650,11 +713,28 @@ Please confirm availability and delivery details.
 Thank you.`;
 
 
-  const url =
-    `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    const url =
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 
-  window.open(url, "_blank");
+    showToast("Order created successfully");
+
+    window.open(url, "_blank");
+
+
+  } catch (error) {
+
+    console.error(
+      "Checkout error:",
+      error
+    );
+
+
+    showToast(
+      "Unable to connect to the order server."
+    );
+
+  }
 
 }
 
